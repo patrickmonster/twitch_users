@@ -34,7 +34,7 @@ async function bootJoinUser(){
 			return;
 		}
 
-	  const part_user = await live_monit_users.findAll({
+	 	const part_user = await live_monit_users.findAll({
 			where:{
 				[Op.not]:{
 					login:{
