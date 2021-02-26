@@ -15,5 +15,7 @@ sequelize - 디비
 2.25~2.26
 
 사용자 : 35795명
+
+차트 - 부모 
 ![chart](https://user-images.githubusercontent.com/7522634/109256677-d95aaf00-7839-11eb-8dcf-27170f30fe6d.png)
    
