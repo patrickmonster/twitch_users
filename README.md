@@ -24,3 +24,17 @@ sequelize - 디비
 결론: 일정 트레픽이 넘어가면 서버 접속이 불안해짐
  -> 대규모일 경우, 서버 트래픽을 분산 시켜야 하는 필요성을 느낌.
  -> 분활 서버일 경우, DB를 통하여 사용자 트래픽에 관하여 연결 정도를 수정하여야 함.
+
+
+
+2.28
+
+사용자 측정 오류부분 개선
+- [익명사용자 로그인][https://github.com/patrickmonster/twitch_users/blob/1595edee240db2591bc343abfbb667fbf2998b2f/monit.js#L18] > 
+- 특정 채널 사용자/ 누적뷰가 50000뷰 이상 나오는 채널 > [누적뷰 높은 사용자 필터링][https://github.com/patrickmonster/twitch_users/blob/1595edee240db2591bc343abfbb667fbf2998b2f/monit.js#L138]
+- [매니져 관리 활동 모니터링][https://github.com/patrickmonster/twitch_users/blob/1595edee240db2591bc343abfbb667fbf2998b2f/monit.js#L162]  > 차후 데이터 수집 및 필터를 위하여... 
+- [토큰갱신][https://github.com/patrickmonster/twitch_users/blob/1595edee240db2591bc343abfbb667fbf2998b2f/monit.js#L24] > 사용자 정보를 취득하기 위하여 토큰정보를 항시 갱신함.
+
+결과
+사용자가 무작위로 추가되지 않아, API 통신을 줄임
+![chart](https://user-images.githubusercontent.com/7522634/109418996-79693180-7a0e-11eb-82ca-53b5bd2948db.png)
