@@ -21,12 +21,12 @@ const client = new tmi.Client({
 	channels: []
 });
 
-async function getToken(user_id=123){ // 사용자 토큰 갱신
+async function getToken(user_id='갱신하는사람 토큰 id값'){
   let user = await twitch_token.findOne({where:{user_id}});// 유효토큰
 
   if(!user){
 		return false;
-	}else if(user.updatedAt.getTime() + (user.expires_in * 1000 + 30) < new Date().getTime()){//토큰만료 30
+	}else if(user.updatedAt.getTime() + (user.expires_in * 1000 + 30) < new Date().getTime()){
     const token = await axios.post(`https://id.twitch.tv/oauth2/token?grant_type=refresh_token&${
       [ `refresh_token=${user.refresh_token}`,
         `client_id=${config.twitch_passport_options.clientID}`,
@@ -48,8 +48,6 @@ async function getToken(user_id=123){ // 사용자 토큰 갱신
 const join_users_name = [];
 const outof_users_name = [];
 const qury_users_name = [];
-
-let func_call;
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 const isNull = val => val === null;
@@ -119,35 +117,37 @@ function addUser(login,channel){
 			qury_users_name.indexOf(login)!= -1){
 		// ?
 	}else{// 신규사용자
-		qury_users_name.push(login);
-		if(qury_users_name.length >= 100){
-			const qury = qury_users_name.join('&login=');
-			qury_users_name.length = 0;
-			getToken().then(token=>{
-				return axios({
-					method:"GET",
-					url:`https://api.twitch.tv/helix/users?login=${qury}`,
-					headers:{
-						'Client-Id':config.twitch_passport_options.clientID,
-						'Authorization':`Bearer ${token}`
+		if(join_users_name.length <= 600){
+			qury_users_name.push(login);
+			if(qury_users_name.length >= 100){
+				const qury = qury_users_name.join('&login=');
+				qury_users_name.length = 0;
+				getToken().then(token=>{
+					return axios({
+						method:"GET",
+						url:`https://api.twitch.tv/helix/users?login=${qury}`,
+						headers:{
+							'Client-Id':config.twitch_passport_options.clientID,
+							'Authorization':`Bearer ${token}`
+						}
+					});
+				}).then(sucess=>{
+					if(sucess.status == 200){
+						const data = sucess.data.data;
+						const pop_user = data.filter(user=>user.view_count > 50000).map(user=>user.login);
+						for (let i in pop_user){
+							live_monit_stream.findOrCreate({
+								where: {login: pop_user[i]}
+							}).then(()=>{}).catch(console.error);
+						}
+						console.log(`추가 사용자 ${pop_user.length} 명`);
+						console.log(pop_user);
+						outof_users_name.push(...data.filter(user=>user.view_count < 50000).map(user=>user.login));
 					}
-				});
-			}).then(sucess=>{
-				if(sucess.status == 200){
-					const data = sucess.data.data;
-					const pop_user = data.filter(user=>user.view_count > 50000).map(user=>user.login);
-					for (let i in pop_user){
-						live_monit_stream.findOrCreate({
-							where: {login: pop_user[i]}
-						}).then(()=>{}).catch(console.error);
-					}
-					console.log(`추가 사용자 ${pop_user.length} 명`);
-					console.log(pop_user);
-					outof_users_name.push(...data.filter(user=>user.view_count < 50000).map(user=>user.login));
-				}
-			}).catch(console.error);
-			console.log(`사용자 정보를 통하여 리스트를 불러옵니다!`);
-		}// if
+				}).catch(console.error);
+				console.log(`사용자 정보를 통하여 리스트를 불러옵니다!`);
+			}// if
+		}
 	}//else
 	live_monit_users.findOrCreate({
 		where: {login: login, parent: channel}
@@ -178,7 +178,6 @@ client.on('ban', (channel, msg, self, tags) => {
 			date_comm : new Date()
 		}).then(()=>{}).catch(console.error);
 });
-
 client.on('chat', (channel, tags, message, self) => {// 채팅 사용자만 발견
 	if(self) return;
 	addUser(tags.username,channel);
